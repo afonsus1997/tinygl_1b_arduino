@@ -33,7 +33,7 @@ And because some systems may have float types which are incompatible with it.
 
 #define TGL_FEATURE_LIT_TEXTURES   1
 /*Enable the patternized "discard"-ing of pixels.*/
-#define TGL_FEATURE_POLYGON_STIPPLE 1
+#define TGL_FEATURE_POLYGON_STIPPLE 0
 /*Enable the use of GL_SELECT and GL_FEEDBACK*/
 #define TGL_FEATURE_ALT_RENDERMODES 0
 /*
@@ -75,9 +75,9 @@ the maximum number of vertices in a polygon is defined in zgl.h
 
 
 
-#define TGL_FEATURE_MULTITHREADED_DRAWPIXELS	1
+#define TGL_FEATURE_MULTITHREADED_DRAWPIXELS	0
 
-#define TGL_FEATURE_MULTITHREADED_COPY_TEXIMAGE_2D 1
+#define TGL_FEATURE_MULTITHREADED_COPY_TEXIMAGE_2D 0
 
 #define TGL_FEATURE_MULTITHREADED_ZB_COPYBUFFER 0
 
@@ -115,12 +115,16 @@ Optimization hint- cost of branching.
 
 #define TGL_FEATURE_16_BITS        0
 #define TGL_FEATURE_32_BITS        1
+#define TGL_FEATURE_1_BIT          0
 
 #if TGL_FEATURE_32_BITS == 1
 #define TGL_FEATURE_RENDER_BITS    32
 
 #elif TGL_FEATURE_16_BITS == 1
 #define TGL_FEATURE_RENDER_BITS    16
+
+#elif TGL_FEATURE_1_BIT == 1
+#define TGL_FEATURE_RENDER_BITS    1
 
 #else
 #error "Unsupported TGL_FEATURE_XX_BITS"

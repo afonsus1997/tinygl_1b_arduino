@@ -53,6 +53,10 @@
 #elif TGL_FEATURE_RENDER_BITS == 16
 #define RGB_TO_PIXEL(r,g,b) \
 	( COLOR_R_GET16(r) | COLOR_G_GET16(g) | COLOR_B_GET16(b)  )
+
+#elif TGL_FEATURE_RENDER_BITS == 1
+#define RGB_TO_PIXEL(r,g,b) (0)
+
 #endif
 /*This is how textures are sampled. if you want to do some sort of fancy texture filtering,*/
 /*you do it here.*/
@@ -105,6 +109,16 @@ typedef GLushort PIXEL;
 #define PSZB 2 
 #define PSZSH 4 
 
+#elif TGL_FEATURE_RENDER_BITS == 1
+
+#define GET_REDDER(p) (0)
+#define GET_GREENER(p) (0)
+#define GET_BLUEER(p) (0)
+#define GET_RED(p) (0)
+#define GET_GREEN(p) (0)
+#define GET_BLUE(p) (0)
+
+typedef GLubyte PIXEL;
 
 #else
 #error "wrong TGL_FEATURE_RENDER_BITS"

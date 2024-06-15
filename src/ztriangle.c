@@ -12,6 +12,7 @@ static GLfloat edgeFunction(GLfloat ax, GLfloat ay, GLfloat bx, GLfloat by, GLfl
 
 #if TGL_FEATURE_RENDER_BITS == 32
 #elif TGL_FEATURE_RENDER_BITS == 16
+#elif TGL_FEATURE_RENDER_BITS == 1
 #else
 #error "WRONG MODE!!!"
 #endif
@@ -168,6 +169,15 @@ void ZB_fillTriangleSmooth(ZBuffer* zb, ZBufferPoint* p0, ZBufferPoint* p1, ZBuf
 		ob1 += dbdx;                                                                                                                                           \
 	}
 
+#elif TGL_FEATURE_RENDER_BITS == 1
+
+#define DRAW_INIT()                                                                                                                                            \
+	{}
+
+#define PUT_PIXEL(_a)                                                                                                                                          \
+	{}
+
+
 #endif
 
 #include "ztriangle.h"
@@ -245,6 +255,16 @@ void ZB_fillTriangleSmoothNOBLEND(ZBuffer* zb, ZBufferPoint* p0, ZBufferPoint* p
 		ob1 += dbdx;                                                                                                                                           \
 	}
 
+
+#elif TGL_FEATURE_RENDER_BITS == 1
+
+#define DRAW_INIT()                                                                                                                                            \
+	{}
+
+#define PUT_PIXEL(_a)                                                                                                                                          \
+	{}
+
+
 #endif
 /* End of 16 bit mode stuff*/
 #include "ztriangle.h"
@@ -265,69 +285,76 @@ void ZB_setTexture(ZBuffer* zb, PIXEL* texture) { zb->current_texture = texture;
 
 #if 1
 
-#define DRAW_LINE_TRI_TEXTURED()                                                                                                                               \
-	{                                                                                                                                                          \
-		register GLushort* pz;                                                                                                                                 \
-		register PIXEL* pp;                                                                                                                                    \
-		register GLuint s, t, z;                                                                                                                               \
-		register GLint n;                                                                                                                                      \
-		OR1OG1OB1DECL                                                                                                                                          \
-		GLfloat sz, tz, fzl, zinv;                                                                                                                             \
-		n = (x2 >> 16) - x1;                                                                                                                                   \
-		fzl = (GLfloat)z1;                                                                                                                                     \
-		zinv = 1.0 / fzl;                                                                                                                                      \
-		pp = (PIXEL*)((GLbyte*)pp1 + x1 * PSZB);                                                                                                               \
-		pz = pz1 + x1;                                                                                                                                         \
-		z = z1;                                                                                                                                                \
-		sz = sz1;                                                                                                                                              \
-		tz = tz1;                                                                                                                                              \
-		while (n >= (NB_INTERP - 1)) {                                                                                                                         \
-			register GLint dsdx, dtdx;                                                                                                                         \
-			{                                                                                                                                                  \
-				GLfloat ss, tt;                                                                                                                                \
-				ss = (sz * zinv);                                                                                                                              \
-				tt = (tz * zinv);                                                                                                                              \
-				s = (GLint)ss;                                                                                                                                 \
-				t = (GLint)tt;                                                                                                                                 \
-				dsdx = (GLint)((dszdx - ss * fdzdx) * zinv);                                                                                                   \
-				dtdx = (GLint)((dtzdx - tt * fdzdx) * zinv);                                                                                                   \
-			}                                                                                                                                                  \
-			fzl += fndzdx;                                                                                                                                     \
-			zinv = 1.0 / fzl;                                                                                                                                  \
-			PUT_PIXEL(0); /*the_x++;*/                                                                                                                         \
-			PUT_PIXEL(1); /*the_x++;*/                                                                                                                         \
-			PUT_PIXEL(2); /*the_x++;*/                                                                                                                         \
-			PUT_PIXEL(3); /*the_x++;*/                                                                                                                         \
-			PUT_PIXEL(4); /*the_x++;*/                                                                                                                         \
-			PUT_PIXEL(5); /*the_x++;*/                                                                                                                         \
-			PUT_PIXEL(6); /*the_x++;*/                                                                                                                         \
-			PUT_PIXEL(7); /*the_x-=7;*/                                                                                                                        \
-			pz += NB_INTERP;                                                                                                                                   \
-			pp += NB_INTERP; /*the_x+=NB_INTERP * PSZB;*/                                                                                                      \
-			n -= NB_INTERP;                                                                                                                                    \
-			sz += ndszdx;                                                                                                                                      \
-			tz += ndtzdx;                                                                                                                                      \
-		}                                                                                                                                                      \
-		{                                                                                                                                                      \
-			register GLint dsdx, dtdx;                                                                                                                         \
-			{                                                                                                                                                  \
-				GLfloat ss, tt;                                                                                                                                \
-				ss = (sz * zinv);                                                                                                                              \
-				tt = (tz * zinv);                                                                                                                              \
-				s = (GLint)ss;                                                                                                                                 \
-				t = (GLint)tt;                                                                                                                                 \
-				dsdx = (GLint)((dszdx - ss * fdzdx) * zinv);                                                                                                   \
-				dtdx = (GLint)((dtzdx - tt * fdzdx) * zinv);                                                                                                   \
-			}                                                                                                                                                  \
-			while (n >= 0) {                                                                                                                                   \
-				PUT_PIXEL(0);                                                                                                                                  \
-				pz += 1;                                                                                                                                       \
-				/*pp = (PIXEL*)((GLbyte*)pp + PSZB);*/                                                                                                         \
-				pp++;                                                                                                                                          \
-				n -= 1;                                                                                                                                        \
-			}                                                                                                                                                  \
-		}                                                                                                                                                      \
-	} 
+#if TGL_FEATURE_RENDER_BITS == 1
+
+#define DRAW_LINE_TRI_TEXTURED()
+
+#else
+
+#define DRAW_LINE_TRI_TEXTURED()                                                                               \
+	{                                                                                                          \
+		register GLushort* pz;                                                                                 \
+		register PIXEL* pp;                                                                                    \
+		register GLuint s, t, z;                                                                               \
+		register GLint n;                                                                                      \
+		OR1OG1OB1DECL                                                                                          \
+		GLfloat sz, tz, fzl, zinv;                                                                             \
+		n = (x2 >> 16) - x1;                                                                                   \
+		fzl = (GLfloat)z1;                                                                                     \
+		zinv = 1.0 / fzl;                                                                                      \
+		pp = (PIXEL*)((GLbyte*)pp1 + x1 * PSZB);                                                               \
+		pz = pz1 + x1;                                                                                         \
+		z = z1;                                                                                                \
+		sz = sz1;                                                                                              \
+		tz = tz1;                                                                                              \
+		while (n >= (NB_INTERP - 1)) {                                                                         \
+			register GLint dsdx, dtdx;                                                                         \
+			{                                                                                                  \
+				GLfloat ss, tt;                                                                                \
+				ss = (sz * zinv);                                                                              \
+				tt = (tz * zinv);                                                                              \
+				s = (GLint)ss;                                                                                 \
+				t = (GLint)tt;                                                                                 \
+				dsdx = (GLint)((dszdx - ss * fdzdx) * zinv);                                                   \
+				dtdx = (GLint)((dtzdx - tt * fdzdx) * zinv);                                                   \
+			}                                                                                                  \
+			fzl += fndzdx;                                                                                     \
+			zinv = 1.0 / fzl;                                                                                  \
+			PUT_PIXEL(0); /*the_x++;*/                                                                         \
+			PUT_PIXEL(1); /*the_x++;*/                                                                         \
+			PUT_PIXEL(2); /*the_x++;*/                                                                         \
+			PUT_PIXEL(3); /*the_x++;*/                                                                         \
+			PUT_PIXEL(4); /*the_x++;*/                                                                         \
+			PUT_PIXEL(5); /*the_x++;*/                                                                         \
+			PUT_PIXEL(6); /*the_x++;*/                                                                         \
+			PUT_PIXEL(7); /*the_x-=7;*/                                                                        \
+			pz += NB_INTERP;                                                                                   \
+			pp += NB_INTERP; /*the_x+=NB_INTERP * PSZB;*/                                                      \
+			n -= NB_INTERP;                                                                                    \
+			sz += ndszdx;                                                                                      \
+			tz += ndtzdx;                                                                                      \
+		}                                                                                                      \
+		{                                                                                                      \
+			register GLint dsdx, dtdx;                                                                         \
+			{                                                                                                  \
+				GLfloat ss, tt;                                                                                \
+				ss = (sz * zinv);                                                                              \
+				tt = (tz * zinv);                                                                              \
+				s = (GLint)ss;                                                                                 \
+				t = (GLint)tt;                                                                                 \
+				dsdx = (GLint)((dszdx - ss * fdzdx) * zinv);                                                   \
+				dtdx = (GLint)((dtzdx - tt * fdzdx) * zinv);                                                   \
+			}                                                                                                  \
+			while (n >= 0) {                                                                                   \
+				PUT_PIXEL(0);                                                                                  \
+				pz += 1;                                                                                       \
+				/*pp = (PIXEL*)((GLbyte*)pp + PSZB);*/                                                         \
+				pp++;                                                                                          \
+				n -= 1;                                                                                        \
+			}                                                                                                  \
+		}                                                                                                      \
+	}
+#endif
 
 void ZB_fillTriangleMappingPerspective(ZBuffer* zb, ZBufferPoint* p0, ZBufferPoint* p1, ZBufferPoint* p2) {
 	PIXEL* texture;

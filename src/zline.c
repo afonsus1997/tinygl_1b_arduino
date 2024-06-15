@@ -17,9 +17,13 @@ void ZB_plot(ZBuffer* zb, ZBufferPoint* p) {
 	
 	if (zbps == 1) {
 		GLushort* pz;
-		PIXEL* pp;
 		pz = zb->zbuf + (p->y * zb->xsize + p->x);
-		pp = (PIXEL*)((GLbyte*)zb->pbuf + zb->linesize * p->y + p->x * PSZB);
+#if TGL_FEATURE_RENDER_BITS == 1
+		PIXEL* pp = (PIXEL*)((GLbyte*)zb->pbuf + zb->linesize * p->y + (p->x >> 3));
+		GLbyte bit = p->x & 0b111;
+#else		
+		PIXEL* pp = (PIXEL*)((GLbyte*)zb->pbuf + zb->linesize * p->y + p->x * PSZB);
+#endif
 
 		if (ZCMP(zz, *pz)) {
 #if TGL_FEATURE_BLEND == 1
@@ -47,7 +51,13 @@ void ZB_plot(ZBuffer* zb, ZBufferPoint* p) {
 		for (y = by; y < ey; y++)
 			for (x = bx; x < ex; x++) {
 				GLushort* pz = zb->zbuf + (y * zb->xsize + x);
-				PIXEL* pp = (PIXEL*)((GLbyte*)zb->pbuf + zb->linesize * y + x * PSZB);
+
+#if TGL_FEATURE_RENDER_BITS == 1
+				PIXEL* pp = (PIXEL*)((GLbyte*)zb->pbuf + zb->linesize * p->y + (p->x >> 3));
+				GLbyte bit = p->x & 0b111;
+#else		
+				PIXEL* pp = (PIXEL*)((GLbyte*)zb->pbuf + zb->linesize * p->y + p->x * PSZB);
+#endif
 				
 				if (ZCMP(zz, *pz)) {
 #if TGL_FEATURE_BLEND == 1

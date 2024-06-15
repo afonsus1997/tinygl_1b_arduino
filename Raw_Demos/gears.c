@@ -257,7 +257,7 @@ void initScene() {
 	glEnable(GL_CULL_FACE);
 	
 	glEnable(GL_LIGHT0);
-	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 	
 
 	glEnable(GL_POLYGON_STIPPLE);
@@ -330,7 +330,7 @@ int main(int argc, char** argv) {
 
 
 	fflush(stdout);
-	imbuf = calloc(1,sizeof(PIXEL) * winSizeX * winSizeY);
+	imbuf = calloc(1, sizeof(PIXEL) * winSizeX * winSizeY);
 	// initialize TinyGL:
 	// unsigned int pitch;
 	//int mode;
@@ -427,6 +427,17 @@ if(flat)	glShadeModel(GL_FLAT); else glShadeModel(GL_SMOOTH);
 		free(pbuf);
 	} else if(TGL_FEATURE_RENDER_BITS == 16){
 		puts("\nTesting 16 bit rendering...\n");
+		pbuf = malloc(3 * winSizeX * winSizeY);
+		for(int i = 0; i < winSizeX * winSizeY; i++){
+			pbuf[3*i+0] = GET_RED(imbuf[i]);
+			pbuf[3*i+1] = GET_GREEN(imbuf[i]);
+			pbuf[3*i+2] = GET_BLUE(imbuf[i]);
+		}
+		stbi_write_png("render.png", winSizeX, winSizeY, 3, pbuf, 0);
+		free(imbuf);
+		free(pbuf);
+	} else if(TGL_FEATURE_RENDER_BITS == 1){
+		puts("\nTesting 1 bit rendering...\n");
 		pbuf = malloc(3 * winSizeX * winSizeY);
 		for(int i = 0; i < winSizeX * winSizeY; i++){
 			pbuf[3*i+0] = GET_RED(imbuf[i]);

@@ -302,6 +302,8 @@ void glopTexImage1D(GLParam* p) {
 	gl_convertRGB_to_8A8R8G8B(im->pixmap, pixels1, width, height);
 #elif TGL_FEATURE_RENDER_BITS == 16
 	gl_convertRGB_to_5R6G5B(im->pixmap, pixels1, width, height);
+#elif TGL_FEATURE_RENDER_BITS == 1
+
 #else
 #error bad TGL_FEATURE_RENDER_BITS
 #endif
@@ -362,6 +364,8 @@ void glopTexImage2D(GLParam* p) {
 	gl_convertRGB_to_8A8R8G8B(im->pixmap, pixels1, width, height);
 #elif TGL_FEATURE_RENDER_BITS == 16
 	gl_convertRGB_to_5R6G5B(im->pixmap, pixels1, width, height);
+#elif TGL_FEATURE_RENDER_BITS == 1
+
 #else
 #error Bad TGL_FEATURE_RENDER_BITS
 #endif

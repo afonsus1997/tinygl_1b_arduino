@@ -83,6 +83,8 @@ void glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, voi
 		tgl_warning("\nERROR: Incorrect type for glDrawPixels. it MUST be GL_UNSIGNED_SHORT or GL_UNSIGNED_SHORT_5_6_5, R5 G6 B5!");
 		return;
 	}
+#elif TGL_FEATURE_RENDER_BITS == 1
+
 #else
 #error "Bad TGL_FEATURE_RENDER_BITS"
 #endif

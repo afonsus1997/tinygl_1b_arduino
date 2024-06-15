@@ -21,10 +21,16 @@ ZBuffer* ZB_open(GLint xsize, GLint ysize, GLint mode,
 
 	zb->xsize = xsize & ~3; 
 	zb->ysize = ysize;
-	
-	
-	zb->linesize = (xsize * PSZB);
 
+
+#if TGL_FEATURE_RENDER_BITS == 1
+	// zb->linesize = xsize >> 3;
+	zb->linesize = xsize * 2;
+#else
+	zb->linesize = (xsize * PSZB);
+#endif
+
+#if TGL_FEATURE_1_BIT != 1
 	switch (mode) {
 #if TGL_FEATURE_32_BITS == 1
 	case ZB_MODE_RGBA:
@@ -38,6 +44,8 @@ ZBuffer* ZB_open(GLint xsize, GLint ysize, GLint mode,
 	default:
 		goto error;
 	}
+#endif
+
 
 	size = zb->xsize * zb->ysize * sizeof(GLushort);
 
@@ -82,7 +90,12 @@ void ZB_resize(ZBuffer* zb, void* frame_buffer, GLint xsize, GLint ysize) {
 
 	zb->xsize = xsize;
 	zb->ysize = ysize;
+
+#if TGL_FEATURE_RENDER_BITS == 1
+	zb->linesize = xsize / 8;
+#else
 	zb->linesize = (xsize * PSZB);
+#endif
 
 	size = zb->xsize * zb->ysize * sizeof(GLushort);
 
@@ -310,6 +323,16 @@ void ZB_copyFrameBuffer(ZBuffer* zb, void* buf, GLint linesize) {
 #endif 
 /* ^TGL_FEATURE_RENDER_BITS == 32 */
 
+
+#if TGL_FEATURE_RENDER_BITS == 1
+
+void ZB_copyFrameBuffer(ZBuffer* zb, void* buf, GLint linesize) {
+	ZB_copyBuffer(zb, buf, linesize);
+}
+
+#endif
+
+
 /*
  * adr must be aligned on an 'int'
  */
@@ -380,6 +403,10 @@ void ZB_clear(ZBuffer* zb, GLint clear_z, GLint z, GLint clear_color, GLint r, G
 			color = RGB_TO_PIXEL(r, g, b);
 #endif
 			memset_l(pp, color, zb->xsize);
+#elif TGL_FEATURE_RENDER_BITS == 1
+
+			// TODO
+
 #else
 #error BADJUJU
 #endif

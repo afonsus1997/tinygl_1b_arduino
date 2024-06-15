@@ -241,6 +241,8 @@ void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format
 		(type != GL_UNSIGNED_INT && type != GL_UNSIGNED_INT_8_8_8_8)
 #elif TGL_FEATURE_RENDER_BITS == 16
 		(type != GL_UNSIGNED_SHORT && type != GL_UNSIGNED_SHORT_5_6_5)
+#elif TGL_FEATURE_RENDER_BITS == 1
+		(1)
 #else
 #error "Unsupported TGL_FEATURE_RENDER_BITS"
 #endif
