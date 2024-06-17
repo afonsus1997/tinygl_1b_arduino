@@ -9,9 +9,10 @@
 
 #include "../include/zbuffer.h"
 #include "msghandling.h"
-ZBuffer* ZB_open(GLint xsize, GLint ysize, GLint mode,
+#include "dither_maps.h"
 
-				 void* frame_buffer) {
+
+ZBuffer* ZB_open(GLint xsize, GLint ysize, GLint mode, void* frame_buffer) {
 	ZBuffer* zb;
 	GLint size;
 
@@ -24,8 +25,7 @@ ZBuffer* ZB_open(GLint xsize, GLint ysize, GLint mode,
 
 
 #if TGL_FEATURE_RENDER_BITS == 1
-	// zb->linesize = xsize >> 3;
-	zb->linesize = xsize * 2;
+	zb->linesize = xsize >> 3;
 #else
 	zb->linesize = (xsize * PSZB);
 #endif
@@ -66,6 +66,9 @@ ZBuffer* ZB_open(GLint xsize, GLint ysize, GLint mode,
 	}
 
 	zb->current_texture = NULL;
+
+	zb->dither_map = dither_maps[0].map;
+	zb->dither_map_size = dither_maps[0].size;
 
 	return zb;
 error:
@@ -327,7 +330,8 @@ void ZB_copyFrameBuffer(ZBuffer* zb, void* buf, GLint linesize) {
 #if TGL_FEATURE_RENDER_BITS == 1
 
 void ZB_copyFrameBuffer(ZBuffer* zb, void* buf, GLint linesize) {
-	ZB_copyBuffer(zb, buf, linesize);
+
+	memcpy(buf, zb->pbuf, zb->ysize * zb->linesize);
 }
 
 #endif
@@ -414,3 +418,10 @@ void ZB_clear(ZBuffer* zb, GLint clear_z, GLint z, GLint clear_color, GLint r, G
 		}
 	}
 }
+
+void ZB_setDitheringMap(ZBuffer *zb, GLuint mapId)
+{
+	zb->dither_map = dither_maps[mapId].map;
+	zb->dither_map_size = dither_maps[mapId].size;
+}
+

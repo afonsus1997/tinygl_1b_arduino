@@ -45,6 +45,18 @@ static GLfloat edgeFunction(GLfloat ax, GLfloat ay, GLfloat bx, GLfloat by, GLfl
 #define ZCMP(z, zpix, _a, c) (((!zbdt) || (z >= zpix)) STIPTEST(_a) NODRAWTEST(c))
 #define ZCMPSIMP(z, zpix, _a, crabapple) (((!zbdt) || (z >= zpix)) STIPTEST(_a))
 
+
+#if TGL_FEATURE_RENDER_BITS == 1
+
+#define DM_X(pix_id) ((pix_id % zb->xsize) % zb->dither_map_size)
+#define DM_Y(pix_id) ((pix_id / zb->xsize) % zb->dither_map_size)
+#define DM_VAL(pix_id) (zb->dither_map[zb->dither_map_size * DM_Y(pix_id) + DM_X(pix_id)])
+
+#define PUT_PIXEL_1B(pix_id, cval) (*(zb->pbuf + (pix_id >> 3)) |= (cval >= DM_VAL(pix_id) ? (1 << (pix_id & 7)) : 0))
+
+#endif
+
+
 void ZB_fillTriangleFlat(ZBuffer* zb, ZBufferPoint* p0, ZBufferPoint* p1, ZBufferPoint* p2) {
 	GLubyte zbdt = zb->depth_test;
 	GLubyte zbdw = zb->depth_write;
@@ -254,19 +266,33 @@ void ZB_fillTriangleSmoothNOBLEND(ZBuffer* zb, ZBufferPoint* p0, ZBufferPoint* p
 		or1 += drdx;                                                                                                                                           \
 		ob1 += dbdx;                                                                                                                                           \
 	}
-
+/* End of 16 bit mode stuff*/
 
 #elif TGL_FEATURE_RENDER_BITS == 1
 
-#define DRAW_INIT()                                                                                                                                            \
+#define DRAW_INIT()                                                                  \
 	{}
 
-#define PUT_PIXEL(_a)                                                                                                                                          \
-	{}
+#define PUT_PIXEL(_a)                                                                \
+	{                                                                                \
+		{                                                                            \
+			register GLuint zz = z >> ZB_POINT_Z_FRAC_BITS;                          \
+			if (ZCMPSIMP(zz, pz[_a], _a, 0)) {                                       \
+				PUT_PIXEL_1B((GLuint)(pp + _a), RGB_TO_PIXEL(or1, og1, ob1));        \
+				if (zbdw)                                                            \
+					pz[_a] = zz;                                                     \
+			}                                                                        \
+		}                                                                            \
+		z += dzdx;                                                                   \
+		og1 += dgdx;                                                                 \
+		or1 += drdx;                                                                 \
+		ob1 += dbdx;                                                                 \
+	}
 
 
 #endif
-/* End of 16 bit mode stuff*/
+
+/* End of 1 bit mode stuff*/
 #include "ztriangle.h"
 } 
 

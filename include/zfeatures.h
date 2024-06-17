@@ -114,8 +114,8 @@ Optimization hint- cost of branching.
 
 
 #define TGL_FEATURE_16_BITS        0
-#define TGL_FEATURE_32_BITS        1
-#define TGL_FEATURE_1_BIT          0
+#define TGL_FEATURE_32_BITS        0
+#define TGL_FEATURE_1_BIT          1
 
 #if TGL_FEATURE_32_BITS == 1
 #define TGL_FEATURE_RENDER_BITS    32
@@ -124,7 +124,11 @@ Optimization hint- cost of branching.
 #define TGL_FEATURE_RENDER_BITS    16
 
 #elif TGL_FEATURE_1_BIT == 1
+
 #define TGL_FEATURE_RENDER_BITS    1
+
+#undef TGL_FEATURE_BLEND
+#define TGL_FEATURE_BLEND          0
 
 #else
 #error "Unsupported TGL_FEATURE_XX_BITS"

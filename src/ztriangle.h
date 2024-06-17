@@ -165,8 +165,12 @@ Things to keep in mind:
 #endif
 	} 
 	/* screen coordinates */
-
+#if TGL_FEATURE_RENDER_BITS == 1
+	pp1 = (PIXEL*)(zb->xsize * p0->y); 
+#else
 	pp1 = (PIXEL*)(zb->pbuf) + zb->xsize * p0->y; 
+#endif
+
 #if TGL_FEATURE_POLYGON_STIPPLE == 1
 	the_y = p0->y;
 #endif

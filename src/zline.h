@@ -24,8 +24,7 @@
 	sx = zb->xsize;
 
 #if TGL_FEATURE_RENDER_BITS == 1
-	pp = (PIXEL*)((GLbyte*)zb->pbuf + zb->linesize * p1->y + (p1->x >> 3));
-	GLbyte bp = p1->x & 0b111;
+	pp = (PIXEL*)(zb->xsize * p1->y + p1->x);
 #else
 	pp = (PIXEL*)((GLbyte*)zb->pbuf + zb->linesize * p1->y + p1->x * PSZB);
 #endif
@@ -47,7 +46,7 @@
 #define RGB(x) x
 
 #if TGL_FEATURE_RENDER_BITS == 1
-#define RGBPIXEL *pp = ((*pp | ((r || g || b) ? (1 << bp) : 0)))
+#define RGBPIXEL PUT_PIXEL_1B((r || g || b))
 #else
 #define RGBPIXEL *pp = RGB_TO_PIXEL(r >> 8, g >> 8, b >> 8)
 #endif
@@ -58,7 +57,7 @@
 #define RGBPIXEL pp[0] = r, pp[1] = g, pp[2] = b
 
 #elif TGL_FEATURE_RENDER_BITS == 1
-#define RGBPIXEL *pp = ((*pp | (color ? (1 << bp) : 0)))
+#define RGBPIXEL PUT_PIXEL_1B(color)
 #else
 #define RGBPIXEL *pp = color
 #endif
@@ -81,36 +80,6 @@
 #define ZZ(x)
 #define PUTPIXEL() RGBPIXEL
 #endif /* INTERP_Z */
-
-#if TGL_FEATURE_RENDER_BITS == 1
-
-#define DRAWLINE(dx, dy, inc_1, inc_2)                                                                              \
-	n = dx;                                                                                                         \
-	ZZ(zinc = (p2->z - p1->z) / n);                                                                                 \
-	RGB(rinc = ((p2->r - p1->r) << 8) / n; ginc = ((p2->g - p1->g) << 8) / n; binc = ((p2->b - p1->b) << 8) / n);   \
-	a = 2 * dy - dx;                                                                                                \
-	dy = 2 * dy;                                                                                                    \
-	dx = 2 * dx - dy;                                                                                               \
-	pp_inc_1 = inc_1 + bp;                                                                                          \
-	pp_inc_2 = inc_2 + bp;                                                                                          \
-	do {                                                                                                            \
-		PUTPIXEL();                                                                                                 \
-		ZZ(z += zinc);                                                                                              \
-		RGB(r += rinc; g += ginc; b += binc);                                                                       \
-		if (a > 0) {                                                                                                \
-			pp = (PIXEL*)((GLbyte*)pp + (pp_inc_1 >> 3));                                                           \
-			bp = pp_inc_1 & 0b111;                                                                                  \
-			ZZ(pz += (inc_1));                                                                                      \
-			a -= dx;                                                                                                \
-		} else {                                                                                                    \
-			pp = (PIXEL*)((GLbyte*)pp + (pp_inc_2 >> 3));                                                           \
-			bp = pp_inc_2 & 0b111;                                                                                  \
-			ZZ(pz += (inc_2));                                                                                      \
-			a += dy;                                                                                                \
-		}                                                                                                           \
-	} while (--n >= 0);
-
-#else
 
 #define DRAWLINE(dx, dy, inc_1, inc_2)                                                                              \
 	n = dx;                                                                                                         \
@@ -135,7 +104,6 @@
 			a += dy;                                                                                                \
 		}                                                                                                           \
 	} while (--n >= 0);
-#endif
 
 
 	/* fin macro */

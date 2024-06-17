@@ -14,8 +14,9 @@
 #define ZB_POINT_Z_FRAC_BITS 14
 
 
-
-
+#ifndef MAX
+#define MAX(a, b) ((a) >= (b) ? (a) : (b))
+#endif
 
 #define ZB_POINT_S_MIN ( (1<<ZB_POINT_S_FRAC_BITS) )
 #define ZB_POINT_S_MAX ( (1<<(1+TGL_FEATURE_TEXTURE_POW2+ZB_POINT_S_FRAC_BITS))-ZB_POINT_S_MIN )
@@ -55,7 +56,7 @@
 	( COLOR_R_GET16(r) | COLOR_G_GET16(g) | COLOR_B_GET16(b)  )
 
 #elif TGL_FEATURE_RENDER_BITS == 1
-#define RGB_TO_PIXEL(r,g,b) (0)
+#define RGB_TO_PIXEL(r,g,b) (MAX((r >> 16) & 0xff, MAX((g >> 16) & 0xff, (b >> 16) & 0xff)))
 
 #endif
 /*This is how textures are sampled. if you want to do some sort of fancy texture filtering,*/
@@ -109,6 +110,7 @@ typedef GLushort PIXEL;
 #define PSZB 2 
 #define PSZSH 4 
 
+/* 1 bit mode */
 #elif TGL_FEATURE_RENDER_BITS == 1
 
 #define GET_REDDER(p) (0)
@@ -119,10 +121,22 @@ typedef GLushort PIXEL;
 #define GET_BLUE(p) (0)
 
 typedef GLubyte PIXEL;
+#define PSZB 1
 
 #else
 #error "wrong TGL_FEATURE_RENDER_BITS"
 #endif
+
+#define DITHER_MAP_CONSTANT         0
+#define DITHER_MAP_BAYER0           1
+#define DITHER_MAP_BAYER1           2
+#define DITHER_MAP_BAYER2           3
+#define DITHER_MAP_BAYER3           4
+#define DITHER_MAP_BAYER4           5
+#define DITHER_MAP_WHITE_NOISE0     6
+#define DITHER_MAP_WHITE_NOISE1     7
+#define DITHER_MAP_BLUE_NOISE0      8
+#define DITHER_MAP_BLUE_NOISE1      9
 
 #if TGL_FEATURE_LIT_TEXTURES == 1
 #define RGB_MIX_FUNC(rr, gg, bb, tpix) \
@@ -287,6 +301,10 @@ typedef struct {
     GLint depth_test;
     GLint depth_write;
     GLubyte frame_buffer_allocated;
+
+    const GLubyte *dither_map;
+    GLuint dither_map_size;
+
 } ZBuffer;
 
 typedef struct {
@@ -299,12 +317,7 @@ typedef struct {
 
 /* zbuffer.c */
 
-ZBuffer *ZB_open(int xsize,int ysize,int mode,
-
-
-
-		 void *frame_buffer);
-
+ZBuffer *ZB_open(int xsize, int ysize, int mode, void *frame_buffer);
 
 void ZB_close(ZBuffer *zb);
 
@@ -359,6 +372,8 @@ void ZB_fillTriangleMappingPerspectiveNOBLEND(ZBuffer *zb,
 
 typedef void (*ZB_fillTriangleFunc)(ZBuffer  *,
 	    ZBufferPoint *,ZBufferPoint *,ZBufferPoint *);
+
+void ZB_setDitheringMap(ZBuffer *zb, GLuint mapId);
 
 /* memory.c */
 #if TGL_FEATURE_CUSTOM_MALLOC == 1
