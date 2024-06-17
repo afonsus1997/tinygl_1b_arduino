@@ -44,8 +44,20 @@ void glopPlotPixel(GLParam* p) {
 	GLContext* c = gl_get_context();
 	GLint x = p[1].i;
 	PIXEL pix = p[2].ui;
-	c->zb->pbuf[x] = pix;
+
+#if TGL_FEATURE_RENDER_BITS == 1
+	#define DM_X(pix_id) ((pix_id % c->zb->xsize) % c->zb->dither_map_size)
+	#define DM_Y(pix_id) ((pix_id / c->zb->xsize) % c->zb->dither_map_size)
+	#define DM_VAL(pix_id) (c->zb->dither_map[c->zb->dither_map_size * DM_Y(pix_id) + DM_X(pix_id)])
+	#define PUT_PIXEL_1B_SET(pix_id) (*(c->zb->pbuf + (pix_id >> 3)) |= (1 << (pix_id & 7)))
+	#define PUT_PIXEL_1B_UNSET(pix_id) (*(c->zb->pbuf + (pix_id >> 3)) &= ~(1 << (pix_id & 7)))
+	#define PUT_PIXEL_1B(pix_id, cval) (cval >= DM_VAL(pix_id) ? PUT_PIXEL_1B_SET(pix_id) : PUT_PIXEL_1B_UNSET(pix_id))
 	
+	PUT_PIXEL_1B(x, pix);
+	// c->zb->pbuf[x >> 3] |= (pix >= DM_VAL(x) ? (1 << (x & 7)) : 0);
+#else
+	c->zb->pbuf[x] = pix;
+#endif
 }
 
 void glPlotPixel(GLint x, GLint y, GLuint pix) {
@@ -60,6 +72,8 @@ void glPlotPixel(GLint x, GLint y, GLuint pix) {
 	if (x > -1 && x < w && y > -1 && y < h) {
 #if TGL_FEATURE_RENDER_BITS == 16
 		pix = RGB_TO_PIXEL((pix & COLOR_MULT_MASK), ((pix & 0xFF00) << (COLOR_SHIFT - 8)), ((pix & 255) << COLOR_SHIFT));
+#elif TGL_FEATURE_RENDER_BITS == 1
+		pix = RGB_TO_PIXEL(pix, pix << 8, pix << 16);
 #endif
 		p[1].i = x + y * w;
 		p[2].ui = pix;

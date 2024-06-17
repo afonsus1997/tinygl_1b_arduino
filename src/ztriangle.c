@@ -52,7 +52,11 @@ static GLfloat edgeFunction(GLfloat ax, GLfloat ay, GLfloat bx, GLfloat by, GLfl
 #define DM_Y(pix_id) ((pix_id / zb->xsize) % zb->dither_map_size)
 #define DM_VAL(pix_id) (zb->dither_map[zb->dither_map_size * DM_Y(pix_id) + DM_X(pix_id)])
 
-#define PUT_PIXEL_1B(pix_id, cval) (*(zb->pbuf + (pix_id >> 3)) |= (cval >= DM_VAL(pix_id) ? (1 << (pix_id & 7)) : 0))
+#define PUT_PIXEL_1B_SET(pix_id) (*(zb->pbuf + (pix_id >> 3)) |= (1 << (pix_id & 7)))
+#define PUT_PIXEL_1B_UNSET(pix_id) (*(zb->pbuf + (pix_id >> 3)) &= ~(1 << (pix_id & 7)))
+#define PUT_PIXEL_1B(pix_id, cval) (cval >= DM_VAL(pix_id) ? PUT_PIXEL_1B_SET(pix_id) : PUT_PIXEL_1B_UNSET(pix_id))
+
+#define PUT_PIXEL_1B_BLEND(pix_id, cval) (*(zb->pbuf + (pix_id >> 3)) |= (cval >= DM_VAL(pix_id) ? (1 << (pix_id & 7)) : 0))
 
 #endif
 
@@ -105,18 +109,37 @@ void ZB_fillTriangleFlatNOBLEND(ZBuffer* zb, ZBufferPoint* p0, ZBufferPoint* p1,
 #define DRAW_INIT()                                                                                                                                            \
 	{}
 
-#define PUT_PIXEL(_a)                                                                                                                                          \
-	{                                                                                                                                                          \
-		{                                                                                                                                                      \
-			register GLuint zz = z >> ZB_POINT_Z_FRAC_BITS;                                                                                                    \
-			if (ZCMPSIMP(zz, pz[_a], _a, 0)) {                                                                                                                 \
-				pp[_a] = color;                                                                                                                                \
-				if (zbdw)                                                                                                                                      \
-					pz[_a] = zz;                                                                                                                               \
-			}                                                                                                                                                  \
-		}                                                                                                                                                      \
-		z += dzdx;                                                                                                                                             \
+#if TGL_FEATURE_RENDER_BITS == 1
+
+#define PUT_PIXEL(_a)                                                                           \
+	{                                                                                           \
+		{                                                                                       \
+			register GLuint zz = z >> ZB_POINT_Z_FRAC_BITS;                                     \
+			if (ZCMPSIMP(zz, pz[_a], _a, 0)) {                                                  \
+				PUT_PIXEL_1B((GLuint)(pp + _a), RGB_TO_PIXEL(color, color << 8, color << 16));  \
+				if (zbdw)                                                                       \
+					pz[_a] = zz;                                                                \
+			}                                                                                   \
+		}                                                                                       \
+		z += dzdx;                                                                              \
 	}
+
+#else
+
+#define PUT_PIXEL(_a)                                                                           \
+	{                                                                                           \
+		{                                                                                       \
+			register GLuint zz = z >> ZB_POINT_Z_FRAC_BITS;                                     \
+			if (ZCMPSIMP(zz, pz[_a], _a, 0)) {                                                  \
+				pp[_a] = color;                                                                 \
+				if (zbdw)                                                                       \
+					pz[_a] = zz;                                                                \
+			}                                                                                   \
+		}                                                                                       \
+		z += dzdx;                                                                              \
+	}
+
+#endif
 
 #include "ztriangle.h"
 }

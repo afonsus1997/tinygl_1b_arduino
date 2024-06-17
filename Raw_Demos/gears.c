@@ -243,7 +243,7 @@ void draw() {
 void initScene() {
 	// static GLfloat pos[4] = {0.408248290463863, 0.408248290463863, 0.816496580927726, 0.0 }; //Light at infinity.
 	static GLfloat pos[4] = {5, 5, 10, 0.0}; // Light at infinity.
-	//static GLfloat pos[4] = {5, 5, -10, 0.0}; // Light at infinity.
+	// static GLfloat pos[4] = {5, 5, -10, 0.0}; // Light at infinity.
 
 	static GLfloat red[4] = {1.0, 0.0, 0.0, 0.0};
 	static GLfloat green[4] = {0.0, 1.0, 0.0, 0.0};
@@ -272,7 +272,7 @@ void initScene() {
 	glMaterialfv(GL_FRONT, GL_SPECULAR, white);
 	glMaterialfv(GL_FRONT, GL_SHININESS, &shininess);
 	glColor3fv(blue);
-	gear(1.0, 4.0, 1.0, 20, 0.7); // The largest gear.
+	gear(1.0, 4.0, 10.0, 20, 0.7); // The largest gear.
 	glEndList();
 
 	gear2 = glGenLists(1);
@@ -280,7 +280,7 @@ void initScene() {
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, red);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, white);
 	glColor3fv(red);
-	gear(0.5, 2.0, 2.0, 10, 0.7); // The small gear with the smaller hole, to the right.
+	gear(0.5, 2.0, 10.0, 10, 0.7); // The small gear with the smaller hole, to the right.
 	glEndList();
 
 	gear3 = glGenLists(1);
@@ -288,7 +288,7 @@ void initScene() {
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, green);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, white);
 	glColor3fv(green);
-	gear(1.3, 2.0, 0.5, 10, 0.7); // The small gear above with the large hole.
+	gear(1.3, 2.0, 10.0, 10, 0.7); // The small gear above with the large hole.
 	glEndList();
 	// glEnable( GL_NORMALIZE );
 }
@@ -330,7 +330,16 @@ int main(int argc, char** argv) {
 
 
 	fflush(stdout);
-	imbuf = calloc(1, sizeof(PIXEL) * winSizeX * winSizeY);
+    
+    if (TGL_FEATURE_RENDER_BITS == 1)
+    {
+        imbuf = calloc(1, (winSizeX / 8) * winSizeY);
+    }
+    else
+    {
+        imbuf = calloc(1, sizeof(PIXEL) * winSizeX * winSizeY);
+    }
+	
 	// initialize TinyGL:
 	// unsigned int pitch;
 	//int mode;
@@ -379,6 +388,9 @@ if(flat)	glShadeModel(GL_FLAT); else glShadeModel(GL_SMOOTH);
 	glLoadIdentity();
 	glTranslatef(0.0, 0.0, -45.0);
 
+    // ZB_setDitheringMap(frameBuffer, DITHER_MAP_BLUE_NOISE0);
+    ZB_setDitheringMap(frameBuffer, DITHER_MAP_BAYER4);
+
 	initScene();
 	if(setenspec) glSetEnableSpecular(GL_TRUE); else glSetEnableSpecular(GL_FALSE);
 	// variables for timing:
@@ -400,11 +412,11 @@ if(flat)	glShadeModel(GL_FLAT); else glShadeModel(GL_SMOOTH);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		draw();
 		if(dotext){
-			glDrawText((unsigned char*)"RED text", 0, 0, 0xFF0000);
+			glDrawText((unsigned char*)"RED text", 0, 0, 0x600000);
 
-			glDrawText((unsigned char*)"GREEN text", 0, 24, 0x00FF00);
+			glDrawText((unsigned char*)"GREEN text", 0, 24, 0x006000);
 
-			glDrawText((unsigned char*)"BLUE text", 0, 48, 0xFF);
+			glDrawText((unsigned char*)"BLUE text", 0, 48, 0x60);
 		}
 		// swap buffers:
 		// Quickly convert all pixels to the correct format
@@ -437,16 +449,23 @@ if(flat)	glShadeModel(GL_FLAT); else glShadeModel(GL_SMOOTH);
 		free(imbuf);
 		free(pbuf);
 	} else if(TGL_FEATURE_RENDER_BITS == 1){
-		puts("\nTesting 1 bit rendering...\n");
-		pbuf = malloc(3 * winSizeX * winSizeY);
-		for(int i = 0; i < winSizeX * winSizeY; i++){
-			pbuf[3*i+0] = GET_RED(imbuf[i]);
-			pbuf[3*i+1] = GET_GREEN(imbuf[i]);
-			pbuf[3*i+2] = GET_BLUE(imbuf[i]);
-		}
-		stbi_write_png("render.png", winSizeX, winSizeY, 3, pbuf, 0);
-		free(imbuf);
-		free(pbuf);
+        pbuf = malloc(3 * winSizeX * winSizeY);
+        GLint ls = frameBuffer->linesize;
+
+        for (int x = 0; x < winSizeX; x++)
+        {
+            for (int y = 0; y < winSizeY; y++)
+            {
+                GLbyte val = (imbuf[y * ls + x / 8] >> (x % 8)) & 1;
+                pbuf[(y * winSizeX + x) * 3 + 0] = val ? 0xff : 0x00;
+                pbuf[(y * winSizeX + x) * 3 + 1] = val ? 0xbf : 0x00;
+                pbuf[(y * winSizeX + x) * 3 + 2] = 0x00;
+            }
+        }
+
+        stbi_write_png("render_1b.png", winSizeX, winSizeY, 3, pbuf, 0);
+        free(imbuf);
+        free(pbuf);
 	}
 	// cleanup:
 	glDeleteList(gear1);
