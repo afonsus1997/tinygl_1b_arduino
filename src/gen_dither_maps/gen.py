@@ -116,6 +116,7 @@ print(FILE_NAME, 'generated!')
 
 print('\nMaps enum:\n')
 
+print(f'#define NUM_DITHER_MAPS             {len(maps)}\n')
 for i, map_ in enumerate(maps):
     print(f'#define DITHER_MAP_{map_[0]:<16} {i}')
 

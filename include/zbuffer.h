@@ -127,6 +127,8 @@ typedef GLubyte PIXEL;
 #error "wrong TGL_FEATURE_RENDER_BITS"
 #endif
 
+#define NUM_DITHER_MAPS             10
+
 #define DITHER_MAP_CONSTANT         0
 #define DITHER_MAP_BAYER0           1
 #define DITHER_MAP_BAYER1           2
@@ -137,6 +139,7 @@ typedef GLubyte PIXEL;
 #define DITHER_MAP_WHITE_NOISE1     7
 #define DITHER_MAP_BLUE_NOISE0      8
 #define DITHER_MAP_BLUE_NOISE1      9
+
 
 #if TGL_FEATURE_LIT_TEXTURES == 1
 #define RGB_MIX_FUNC(rr, gg, bb, tpix) \
@@ -326,6 +329,8 @@ void ZB_clear(ZBuffer *zb,GLint clear_z,GLint z,
 	      GLint clear_color,GLint r,GLint g,GLint b);
 /* linesize is in BYTES */
 void ZB_copyFrameBuffer(ZBuffer *zb,void *buf,GLint linesize);
+
+GLint ZB_copyFrameBufferARGB32(ZBuffer* zb, void* buf, GLuint bufSize);
 
 /* zdither.c */
 

@@ -336,6 +336,41 @@ void ZB_copyFrameBuffer(ZBuffer* zb, void* buf, GLint linesize) {
 
 #endif
 
+GLint ZB_copyFrameBufferARGB32(ZBuffer* zb, void* buf, GLuint bufSize)
+{
+	GLuint req_size = zb->xsize * zb->ysize * 4;
+
+	if (bufSize < req_size)
+	{
+		return 0;
+	}
+
+#if TGL_FEATURE_RENDER_BITS == 1
+
+    GLint ls = zb->linesize;
+
+    for (int x = 0; x < zb->xsize; x++)
+    {
+        for (int y = 0; y < zb->ysize; y++)
+        {
+            GLbyte val = (zb->pbuf[y * ls + x / 8] >> (x % 8)) & 1;
+            
+            ((GLubyte*)buf)[(y * zb->xsize + x) * 4 + 3] = 0xff;
+            ((GLubyte*)buf)[(y * zb->xsize + x) * 4 + 2] = val ? 0xff : 0x00;
+            ((GLubyte*)buf)[(y * zb->xsize + x) * 4 + 1] = val ? 0xbf : 0x00;
+            ((GLubyte*)buf)[(y * zb->xsize + x) * 4 + 0] = 0x00;
+
+        }
+    }
+#elif TGL_FEATURE_RENDER_BITS == 32
+
+    memcpy(buf, zb->pbuf, req_size);
+
+#endif
+
+	return 1;
+}
+
 
 /*
  * adr must be aligned on an 'int'
@@ -409,8 +444,7 @@ void ZB_clear(ZBuffer* zb, GLint clear_z, GLint z, GLint clear_color, GLint r, G
 			memset_l(pp, color, zb->xsize);
 #elif TGL_FEATURE_RENDER_BITS == 1
 
-			// TODO
-
+			memset(zb->pbuf, RGB_TO_PIXEL(r, g, b) ? 0xff : 0, zb->linesize * zb->ysize);
 #else
 #error BADJUJU
 #endif
@@ -421,6 +455,11 @@ void ZB_clear(ZBuffer* zb, GLint clear_z, GLint z, GLint clear_color, GLint r, G
 
 void ZB_setDitheringMap(ZBuffer *zb, GLuint mapId)
 {
+	if (mapId >= NUM_DITHER_MAPS)
+	{
+		mapId = 0;
+	}
+	
 	zb->dither_map = dither_maps[mapId].map;
 	zb->dither_map_size = dither_maps[mapId].size;
 }

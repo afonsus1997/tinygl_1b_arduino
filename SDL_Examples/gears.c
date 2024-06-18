@@ -192,7 +192,7 @@ static GLint gear1, gear2, gear3;
 static GLfloat angle = 0.0;
 
 void draw() {
-	angle += 2.0;
+	angle += 0.2;
 	glPushMatrix();
 	glRotatef(view_rotx, 1.0, 0.0, 0.0);
 	glRotatef(view_roty, 0.0, 1.0, 0.0);
@@ -250,7 +250,7 @@ void initScene() {
 	glMaterialfv(GL_FRONT, GL_SPECULAR, white);
 	glMaterialfv(GL_FRONT, GL_SHININESS, &shininess);
 	glColor3fv(red);
-	gear(1.0, 4.0, 1.0, 20, 0.7); // The largest gear.
+	gear(1.0, 4.0, 3.0, 20, 0.7); // The largest gear.
 	glEndList();
 
 	gear2 = glGenLists(1);
@@ -258,7 +258,7 @@ void initScene() {
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, green);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, white);
 	glColor3fv(green);
-	gear(0.5, 2.0, 2.0, 10, 0.7); // The small gear with the smaller hole, to the right.
+	gear(0.5, 2.0, 3.0, 10, 0.7); // The small gear with the smaller hole, to the right.
 	glEndList();
 
 	gear3 = glGenLists(1);
@@ -266,7 +266,7 @@ void initScene() {
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, blue);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, white);
 	glColor3fv(blue);
-	gear(1.3, 2.0, 0.5, 10, 0.7); // The small gear above with the large hole.
+	gear(1.3, 2.0, 3.0, 10, 0.7); // The small gear above with the large hole.
 	glEndList();
 	// glEnable( GL_NORMALIZE );
 }
@@ -276,11 +276,13 @@ int main(int argc, char** argv) {
 	int winSizeX = 640;
 	int winSizeY = 480;
 	unsigned int fps = 0;
-	unsigned int flat = 1;
+	unsigned int flat = 0;
 	unsigned int setenspec = 1;
 	unsigned int dotext = 1;
 	unsigned int blending = 0;
 	char needsRGBAFix = 0;
+	unsigned int dith_map_id = 0;
+
 	if (argc > 1) {
 		char* larg = "";
 		for (int i = 1; i < argc; i++) {
@@ -334,7 +336,7 @@ int main(int argc, char** argv) {
 #endif
 	SDL_Surface* screen = NULL;
 	if (!noSDL)
-		if ((screen = SDL_SetVideoMode(winSizeX, winSizeY, TGL_FEATURE_RENDER_BITS, SDL_SWSURFACE)) == 0) {
+		if ((screen = SDL_SetVideoMode(winSizeX, winSizeY, 32, SDL_SWSURFACE)) == 0) {
 			fprintf(stderr, "ERROR: Video mode set failed.\n");
 			return 1;
 		}
@@ -464,6 +466,8 @@ int main(int argc, char** argv) {
 	unsigned int tNow = SDL_GetTicks();
 	unsigned int tLastFps = tNow;
 
+	ZB_setDitheringMap(frameBuffer, 9);
+
 	// main loop:
 	int isRunning = 1;
 	// float test = 0;
@@ -492,6 +496,22 @@ int main(int argc, char** argv) {
 					case SDLK_RIGHT:
 						view_roty -= 5.0;
 						break;
+					case SDLK_m:
+						dith_map_id++;
+						if (dith_map_id >= NUM_DITHER_MAPS)
+						{
+							dith_map_id = 0;
+						}
+						ZB_setDitheringMap(frameBuffer, dith_map_id);
+						break;
+					case SDLK_s:
+						setenspec = !setenspec;
+						glSetEnableSpecular(setenspec ? GL_TRUE : GL_FALSE);
+						break;
+					case SDLK_f:
+						flat = !flat;
+						glShadeModel(flat ? GL_FLAT : GL_SMOOTH);
+						break;
 					case SDLK_ESCAPE:
 					case SDLK_q:
 						isRunning = 0;
@@ -508,6 +528,11 @@ int main(int argc, char** argv) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		draw();
 		if (dotext) {
+
+#if TGL_FEATURE_RENDER_BITS == 1
+			glDrawText((unsigned char*)"1BIT text", 0, 0, 0x808080);
+
+#else
 			glDrawText((unsigned char*)"RED text", 0, 0, 0xFF0000);
 
 			glDrawText((unsigned char*)"GREEN text", 0, 24, 0x00FF00);
@@ -516,6 +541,8 @@ int main(int argc, char** argv) {
 									   "BLUE text"
 									   "\xa1",
 					   0, 48, 0xFF);
+#endif
+
 		}
 		// swap buffers:
 		if (!noSDL)
@@ -535,7 +562,8 @@ int main(int argc, char** argv) {
 #endif
 
 		if (!noSDL)
-			ZB_copyFrameBuffer(frameBuffer, screen->pixels, screen->pitch);
+			ZB_copyFrameBufferARGB32(frameBuffer, screen->pixels, screen->pitch * screen->h);
+
 		if (!noSDL)
 			if (SDL_MUSTLOCK(screen))
 				SDL_UnlockSurface(screen);
