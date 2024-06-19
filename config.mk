@@ -20,9 +20,17 @@ CC=gcc
 #CFLAGS_LIB= -Wall -O3 -std=c99 -pedantic -DNDEBUG -march=native -Wno-unused-function
 # CFLAGS_LIB= -Wall -O3 -std=c99 -pedantic -DNDEBUG -fopenmp -march=native -Wno-unused-function
 
-CFLAGS= -Wall -Og -g -std=c2x -DDEBUG -march=native -fopenmp -Wno-unused-function
-CFLAGS_LIB= -Wall -Og -g -std=c2x -pedantic -DDEBUG -fopenmp -march=native -Wno-unused-function
 
+# DEBUG
+
+# CFLAGS= -Wall -Og -g -std=c2x -DDEBUG -march=native -fopenmp -Wno-unused-function
+# CFLAGS_LIB= -Wall -Og -g -std=c2x -pedantic -DDEBUG -fopenmp -march=native -Wno-unused-function
+
+
+# NON-DEBUG
+
+CFLAGS= -Wall -O3 -std=c2x -DNDEBUG -march=native -fopenmp -Wno-unused-function
+CFLAGS_LIB= -Wall -O3 -std=c2x -pedantic -DNDEBUG -fopenmp -march=native -Wno-unused-function
 
 
 #CFLAGS= -Wall -Ofast -std=gnu99 -DNDEBUG -mtune=native

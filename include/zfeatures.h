@@ -43,12 +43,12 @@ the maximum number of vertices in a polygon is defined in zgl.h
 */
 #define TGL_FEATURE_GL_POLYGON      0
 
-#define TGL_FEATURE_BLEND 			1
+#define TGL_FEATURE_BLEND        1
 
 #define TGL_FEATURE_BLEND_DRAW_PIXELS 0
 /*The width of textures as a power of 2. The default is 8, or 256x256 textures.*/
-#define TGL_FEATURE_TEXTURE_POW2	8
-#define TGL_FEATURE_TEXTURE_DIM		(1<<TGL_FEATURE_TEXTURE_POW2)
+#define TGL_FEATURE_TEXTURE_POW2 3
+#define TGL_FEATURE_TEXTURE_DIM     (1<<TGL_FEATURE_TEXTURE_POW2)
 
 /*A stipple pattern is 128 bytes in size.*/
 #define TGL_POLYGON_STIPPLE_BYTES 128
@@ -75,7 +75,7 @@ the maximum number of vertices in a polygon is defined in zgl.h
 
 
 
-#define TGL_FEATURE_MULTITHREADED_DRAWPIXELS	0
+#define TGL_FEATURE_MULTITHREADED_DRAWPIXELS 0
 
 #define TGL_FEATURE_MULTITHREADED_COPY_TEXIMAGE_2D 0
 
