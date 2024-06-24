@@ -48,15 +48,16 @@ static GLfloat edgeFunction(GLfloat ax, GLfloat ay, GLfloat bx, GLfloat by, GLfl
 
 #if TGL_FEATURE_RENDER_BITS == 1
 
-#define DM_X(pix_id) ((pix_id % zb->xsize) % zb->dither_map_size)
-#define DM_Y(pix_id) ((pix_id / zb->xsize) % zb->dither_map_size)
-#define DM_VAL(pix_id) (zb->dither_map[zb->dither_map_size * DM_Y(pix_id) + DM_X(pix_id)])
+#define DM_X(pix_x) (pix_x & (zb->dither_map_size - 1))
+#define DM_Y(pix_y) (pix_y & (zb->dither_map_size - 1))
+
+#define DM_VAL(pix_x, pix_y) (zb->dither_map[zb->dither_map_size * DM_Y(pix_y) + DM_X(pix_x)])
 
 #define PUT_PIXEL_1B_SET(pix_id) (*(zb->pbuf + (pix_id >> 3)) |= (1 << (pix_id & 7)))
 #define PUT_PIXEL_1B_UNSET(pix_id) (*(zb->pbuf + (pix_id >> 3)) &= ~(1 << (pix_id & 7)))
-#define PUT_PIXEL_1B(pix_id, cval) (cval >= DM_VAL(pix_id) ? PUT_PIXEL_1B_SET(pix_id) : PUT_PIXEL_1B_UNSET(pix_id))
+#define PUT_PIXEL_1B(pix_id, pix_x, pix_y, cval) (cval >= DM_VAL(pix_x, pix_y) ? PUT_PIXEL_1B_SET(pix_id) : PUT_PIXEL_1B_UNSET(pix_id))
 
-#define PUT_PIXEL_1B_BLEND(pix_id, cval) (*(zb->pbuf + (pix_id >> 3)) |= (cval >= DM_VAL(pix_id) ? (1 << (pix_id & 7)) : 0))
+#define PUT_PIXEL_1B_BLEND(pix_id, pix_x, pix_y, cval) (*(zb->pbuf + (pix_id >> 3)) |= (cval >= DM_VAL(pix_x, pix_y) ? (1 << (pix_id & 7)) : 0))
 
 #endif
 
@@ -116,7 +117,7 @@ void ZB_fillTriangleFlatNOBLEND(ZBuffer* zb, ZBufferPoint* p0, ZBufferPoint* p1,
 		{                                                                                       \
 			register GLuint zz = z >> ZB_POINT_Z_FRAC_BITS;                                     \
 			if (ZCMPSIMP(zz, pz[_a], _a, 0)) {                                                  \
-				PUT_PIXEL_1B((GLuint)(pp + _a), RGB_TO_PIXEL(color, color << 8, color << 16));  \
+				PUT_PIXEL_1B((GLuint)(pp + _a), ppx + _a, ppy, RGB_TO_PIXEL(color, color << 8, color << 16));       \
 				if (zbdw)                                                                       \
 					pz[_a] = zz;                                                                \
 			}                                                                                   \
@@ -301,7 +302,7 @@ void ZB_fillTriangleSmoothNOBLEND(ZBuffer* zb, ZBufferPoint* p0, ZBufferPoint* p
 		{                                                                            \
 			register GLuint zz = z >> ZB_POINT_Z_FRAC_BITS;                          \
 			if (ZCMPSIMP(zz, pz[_a], _a, 0)) {                                       \
-				PUT_PIXEL_1B((GLuint)(pp + _a), RGB_TO_PIXEL(or1, og1, ob1));        \
+				PUT_PIXEL_1B((GLuint)(pp + _a), ppx + _a, ppy, RGB_TO_PIXEL(or1, og1, ob1));             \
 				if (zbdw)                                                            \
 					pz[_a] = zz;                                                     \
 			}                                                                        \

@@ -23,6 +23,7 @@ Things to keep in mind:
 	GLfloat fdx1, fdx2, fdy1, fdy2;
 	GLushort* pz1;
 	PIXEL* pp1;
+	GLuint ppx, ppy;
 
 	GLint part;
 	GLint dx1, dy1, dx2, dy2;
@@ -166,7 +167,8 @@ Things to keep in mind:
 	} 
 	/* screen coordinates */
 #if TGL_FEATURE_RENDER_BITS == 1
-	pp1 = (PIXEL*)(zb->xsize * p0->y); 
+	pp1 = (PIXEL*)(zb->xsize * p0->y);
+	ppy = p0->y;
 #else
 	pp1 = (PIXEL*)(zb->pbuf) + zb->xsize * p0->y; 
 #endif
@@ -307,7 +309,7 @@ Things to keep in mind:
 #endif
 
 				n = (x2 >> 16) - x1;
-				
+				ppx = x1;
 				pp = (PIXEL*)pp1 + x1;
 #ifdef INTERP_Z
 				pz = pz1 + x1;
@@ -336,6 +338,7 @@ Things to keep in mind:
 #endif
 					
 					pp += 4;
+					ppx += 4;
 					n -= 4;
 				}
 				while (n >= 0) {
@@ -346,6 +349,7 @@ Things to keep in mind:
 #endif
 					/*pp = (PIXEL*)((GLbyte*)pp + PS_ZB);*/
 					pp++;
+					ppx++;
 					n--;
 				}
 			}
@@ -400,6 +404,7 @@ Things to keep in mind:
 			/* screen coordinates */
 			
 			pp1 += zb->xsize;
+			ppy++;
 #if TGL_FEATURE_POLYGON_STIPPLE == 1
 			the_y++;
 #endif
