@@ -1,43 +1,43 @@
+include ../config.mk
 
-LIBNAME=libTinyGL.a
-LIB=lib/$(LIBNAME)
-LIBDIR=/usr/local/lib
-INCDIR=/usr/local/include
-BINDIR=/usr/local/bin
+OBJS= api.o list.o vertex.o init.o matrix.o texture.o \
+      misc.o clear.o light.o clip.o select.o get.o error.o \
+      zbuffer.o zline.o zdither.o ztriangle.o \
+      zmath.o image_util.o oscontext.o msghandling.o \
+      arrays.o specbuf.o memory.o
+ifdef TINYGL_USE_GLX
+OBJS += glx.o
+endif
+ifdef TINYGL_USE_NANOX
+OBJS += nglx.o
+endif
 
-all: $(LIB) RDMOS
-	@echo Done!
+INCLUDES = -I../include
+LIB = libTinyGL.a
 
-$(LIB):
-	cd src && $(MAKE) && cd ..
-	cp src/*.a ./lib/
+all: $(LIB)
 
-install: $(LIB)
-	cp $(LIB) $(LIBDIR)
-	mkdir $(INCDIR)/tinygl || echo "You installed before?"
-	cp -r include/* $(INCDIR)/tinygl
+$(LIB): $(OBJS)
+	rm -f $(LIB)
+	ar rcs $(LIB) $(OBJS)
+	cp $(LIB) ../lib
 
-uninstall:
-	rm -f $(LIBDIR)/$(LIBNAME)
-	rm -rf $(INCDIR)/tinygl
-
-SDL_Examples: $(LIB)
-	@echo "These demos require SDL 1.2 to compile."
-	cd SDL_Examples && $(MAKE) && cd ..
-
-tglgears: $(LIB)
-	@echo "These demos require SDL 1.2 to compile."
-	cd SDL_Examples && $(MAKE) install_tglgears && cd ..
-
-RDMOS: $(LIB)
-	@echo "Building the RAW DEMOS. These do not require anything special on your system, so they should succeed."
-	cd Raw_Demos && $(MAKE) && cd ..
-	
 clean:
-	cd src && $(MAKE) clean && cd ..
-	cd SDL_Examples && $(MAKE) clean && cd ..
-	cd Raw_Demos && $(MAKE) clean && cd ..
-	cd lib && rm -f *.a && cd ..
-#clean:
-#	rm -f *~ *.o *.a
-#	cd SDL_Examples && $(MAKE) clean && cd ..
+	rm -f *~ *.o *.a
+
+.c.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $*.c
+
+clip.o: zgl.h zfeatures.h
+vertex.o: zgl.h zfeatures.h
+light.o: zgl.h zfeatures.h
+matrix.o: zgl.h zfeatures.h
+list.o: zgl.h opinfo.h zfeatures.h
+arrays.c: zgl.h zfeatures.h
+specbuf.o: zgl.h zfeatures.h
+glx.o: zgl.h zfeatures.h
+nglx.o: zgl.h zfeatures.h
+zline.o: zgl.h zfeatures.h zline.h
+
+ztriangle.o: ztriangle.c ztriangle.h zgl.h zfeatures.h
+	$(CC) $(CFLAGS) -Wno-uninitialized $(INCLUDES) -c $*.c
