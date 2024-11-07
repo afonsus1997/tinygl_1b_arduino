@@ -1,0 +1,10 @@
+{
+  "files.associations": {
+    "*.v": "systemverilog",
+    "*.bhv": "vhdl",
+    "*.ent": "vhdl",
+    "*.pkg": "vhdl",
+    "*.rtl": "vhdl",
+    "error_check_no_context.h": "c"
+  }
+}
